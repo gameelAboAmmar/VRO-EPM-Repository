@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="08beaba42f681350bdca5b707fa4e3a9" label="هدف" max_length="40" name="x_1799784_vro_app_objective" type="collection">
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="500" name="name_ar" type="string"/>
+        <element label="End date" max_length="40" name="end_date" type="glide_date"/>
+        <element label="English name" mandatory="true" max_length="500" name="name_en" type="string"/>
+        <element label="Status" max_length="32" name="status" reference="x_1799784_vro_app_lookup_value" type="reference"/>
+        <element label="Start date" max_length="40" name="start_date" type="glide_date"/>
+        <element label="Code" mandatory="true" max_length="60" name="code" type="string" unique="true"/>
+        <element label="Programme" max_length="32" name="program" reference="x_1799784_vro_app_program" type="reference"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <index name="index">
+            <element name="program"/>
+        </index>
+        <index name="index2">
+            <element name="status"/>
+        </index>
+    </element>
+</database>

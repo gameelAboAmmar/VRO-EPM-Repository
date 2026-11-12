@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="a6aea7a42f681350bdca5b707fa4e3b6" label="Organisation unit" max_length="40" name="x_1799784_vro_app_org_unit" type="collection">
+        <element label="English name" mandatory="true" max_length="300" name="name_en" type="string"/>
+        <element label="Parent" max_length="32" name="parent" reference="x_1799784_vro_app_org_unit" type="reference"/>
+        <element label="Code" mandatory="true" max_length="60" name="code" type="string" unique="true"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="300" name="name_ar" type="string"/>
+        <element choice="1" label="Unit type" mandatory="true" max_length="20" name="unit_type" type="string">
+            <choice>
+                <element inactive_on_update="false" label="Agency" sequence="100" value="agency"/>
+                <element inactive_on_update="false" label="Sector" sequence="200" value="sector"/>
+            </choice>
+        </element>
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <index name="index">
+            <element name="parent"/>
+        </index>
+    </element>
+</database>

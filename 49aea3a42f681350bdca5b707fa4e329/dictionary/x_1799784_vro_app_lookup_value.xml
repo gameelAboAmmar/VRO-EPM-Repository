@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="ceae27a42f681350bdca5b707fa4e3ab" label="Lookup value" max_length="40" name="x_1799784_vro_app_lookup_value" type="collection">
+        <element default="100" label="Order" max_length="40" name="order" type="integer"/>
+        <element label="Lookup type" mandatory="true" max_length="32" name="type" reference="x_1799784_vro_app_lookup_type" type="reference"/>
+        <element label="Code" mandatory="true" max_length="100" name="code" type="string" unique="true"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="300" name="name_ar" type="string"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <element label="English name" mandatory="true" max_length="300" name="name_en" type="string"/>
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <index name="index">
+            <element name="type"/>
+        </index>
+    </element>
+</database>

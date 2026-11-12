@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_1799784_vro_app.VroSeed</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Loads seed rows from inside the app scope (created by the provisioning script)</description>
+        <mobile_callable>false</mobile_callable>
+        <name>VroSeed</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var VroSeed = Class.create();
+VroSeed.prototype = {
+  initialize: function () {},
+  upsert: function (table, key, rowsJson) {
+    var rows = JSON.parse(rowsJson), ids = {}, created = 0, updated = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i], gr = new GlideRecord(table);
+      gr.addQuery(key, row[key]); gr.setLimit(1); gr.query();
+      var isNew = !gr.next();
+      if (isNew) { gr.initialize(); }
+      for (var f in row) { if (row.hasOwnProperty(f)) { gr.setValue(f, row[f]); } }
+      var id = isNew ? gr.insert() : gr.update();
+      if (!id) { throw new Error("upsert failed on " + table + " " + row[key]); }
+      ids[row[key]] = String(id);
+      if (isNew) { created++; } else { updated++; }
+    }
+    return JSON.stringify({ created: created, updated: updated, ids: ids });
+  },
+  type: "VroSeed"
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-11 12:52:03</sys_created_on>
+        <sys_id>0ba2b3202fa81350bdca5b707fa4e3c6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>VroSeed</sys_name>
+        <sys_package display_value="VRO-APP" source="x_1799784_vro_app">49aea3a42f681350bdca5b707fa4e329</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="VRO-APP">49aea3a42f681350bdca5b707fa4e329</sys_scope>
+        <sys_update_name>sys_script_include_0ba2b3202fa81350bdca5b707fa4e3c6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-11 12:52:03</sys_updated_on>
+    </sys_script_include>
+</record_update>

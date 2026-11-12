@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller = function ($sce, $window) {
+  var c = this;
+  function sget(k, d) { try { return $window.localStorage.getItem(k) || d; } catch (e) { return d; } }
+  c.ar = sget('vroLang', 'ar') === 'ar';
+  c.dark = sget('vroTheme', 'light') === 'dark';
+  c.lab = function (l) { return l ? ((c.ar ? l.ar : l.en) || l.en || '') : ''; };
+  c.num = function (n) { return c.ar ? String(n).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.charAt(d); }) : String(n); };
+  var P = {
+    home: 'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10', flag: 'M5 21V4M5 4h11l-2 4 2 4H5', layers: 'M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5',
+    target: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 16a4 4 0 100-8 4 4 0 000 8zM12 12h.01', bulb: 'M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z',
+    folder: 'M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V6z', org: 'M12 3v5M5 21v-5a2 2 0 012-2h10a2 2 0 012 2v5M12 8a2 2 0 100 4 2 2 0 000-4z',
+    list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01', tag: 'M20 12l-8 8-9-9V4h7l10 8zM7.5 8.5h.01', dot: 'M12 12h.01'
+  };
+  c.icon = function (n) { return $sce.trustAsHtml('<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + (P[n] || P.dot) + '"/></svg>'); };
+  c.big = function (key) { var r = 0; (c.data.cards || []).forEach(function (x) { if (x.key === key) { r = x.count; } }); return r; };
+};
+]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.vro-home { --card: #ffffff; --head: #003462; --soft: #E6F2EC; --text: #17304a; --muted: #64788a; --line: #e2eae6;
+  max-width: 1320px; margin: 0 auto; padding: 18px 16px 60px; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: var(--text); display: grid; gap: 18px;
+  &gt; * { min-width: 0; }
+  .vh-hero { background: linear-gradient(120deg, #003462 0%, #0d5c7a 52%, #1B8354 100%); color: #fff; border-radius: 26px; padding: 28px 30px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; align-items: center; position: relative; overflow: hidden; }
+  .vh-hero:before, .vh-hero:after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.07); }
+  .vh-hero:before { width: 280px; height: 280px; inset-inline-end: -70px; top: -90px; }
+  .vh-hero:after { width: 180px; height: 180px; inset-inline-start: 30%; bottom: -100px; }
+  .vh-hero &gt; * { position: relative; z-index: 1; }
+  .vh-hero h1 { margin: 0 0 6px; font-size: 2em; color: #fff; }
+  .vh-hero p { margin: 0 0 16px; color: #d4e6ef; }
+  .vh-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .vh-b { display: inline-flex; align-items: center; height: 44px; padding: 0 22px; border-radius: 99px; font-weight: 800; text-decoration: none; }
+  .vh-b.w { background: #fff; color: #003462; }
+  .vh-b.g { background: rgba(255,255,255,.16); color: #fff; border: 1.5px solid rgba(255,255,255,.4); }
+  .vh-b:hover { text-decoration: none; opacity: .92; }
+  .vh-big { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .vh-big &gt; div { background: rgba(255,255,255,.12); border-radius: 18px; padding: 16px; text-align: center; }
+  .vh-big b { display: block; font-size: 2.2em; line-height: 1.1; color: #fff; }
+  .vh-big span { color: #d4e6ef; font-size: .9em; }
+  .vh-h { margin: 6px 0 0; font-size: 1.25em; color: var(--head); }
+  .vh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .vh-card { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,52,98,.08); padding: 18px; text-decoration: none; color: var(--text); transition: transform .15s; }
+  .vh-card:hover { border-color: #1B8354; text-decoration: none; transform: translateY(-2px); }
+  .vh-ico { flex: none; width: 54px; height: 54px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; background: #E6F2EC; color: #1B8354; }
+  .vh-ico.c2 { background: #e5eef9; color: #2f7fc1; }
+  .vh-ico.c3 { background: #fdf0dd; color: #c97800; }
+  .vh-ico.c4 { background: #f1e8f7; color: #7b4aa0; }
+  .vh-ico.c5 { background: #fbe8e5; color: #C0392B; }
+  .vh-tx { display: grid; line-height: 1.2; }
+  .vh-tx b { font-size: 1.9em; color: var(--head); }
+  .vh-tx span { color: var(--muted); }
+  .vh-panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+  .vh-panel h3 { margin: 0 0 6px; color: var(--head); }
+  .vh-note, .vh-meta { color: var(--muted); margin: 0 0 12px; }
+  .vh-links { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .vh-links a { background: #E6F2EC; color: #12804e; border-radius: 99px; padding: 8px 16px; font-weight: 700; text-decoration: none; }
+}
+.vro-home.dark { --card: #152636; --head: #E8F1F8; --text: #dbe7f1; --muted: #8fa6ba; --line: #26425b; background: #0B1824; border-radius: 20px; }
+@media (max-width: 860px) { .vro-home .vh-hero { grid-template-columns: 1fr; padding: 20px; } }
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>vro_home</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>VRO Home</name>
+        <option_schema>[]</option_schema>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function () {
+  var UI = {"pages":[{"id":"vro_home","title":"VRO APP - Home","widget":"vro_home"},{"id":"vro_strategies","title":"Strategies","widget":"vro_table","options":{"table":"strategy"}},{"id":"vro_programs","title":"Programmes","widget":"vro_table","options":{"table":"program"}},{"id":"vro_objectives","title":"Objectives","widget":"vro_table","options":{"table":"objective"}},{"id":"vro_initiatives","title":"Initiatives","widget":"vro_table","options":{"table":"initiative"}},{"id":"vro_projects","title":"Projects","widget":"vro_table","options":{"table":"project"}},{"id":"vro_org_units","title":"Organisation units","widget":"vro_table","options":{"table":"org_unit"}},{"id":"vro_lookup_values","title":"Lookup values","widget":"vro_table","options":{"table":"lookup_value"}},{"id":"vro_lookup_types","title":"Lookup types","widget":"vro_table","options":{"table":"lookup_type"}}],"tables":{"strategy":{"page":"vro_strategies","icon":"layers","title":{"en":"Strategies","ar":"الإستراتيجيات"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add strategy","ar":"إضافة إستراتيجية"},"cols":["code","name_ar","name_en","strategy_type","active"],"search":["code","name_ar","name_en"],"filters":["active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"label":{"en":"Inactive","ar":"غير فعالة"},"filter":{"active":"false"}}]},"program":{"page":"vro_programs","icon":"layers","title":{"en":"Programmes","ar":"البرامج"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add programme","ar":"إضافة برنامج"},"cols":["code","name_ar","name_en","strategy","active"],"search":["code","name_ar","name_en"],"filters":["strategy","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"objective":{"page":"vro_objectives","icon":"target","title":{"en":"Objectives","ar":"الأهداف"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add objective","ar":"إضافة هدف"},"cols":["code","name_ar","program","status","active"],"search":["code","name_ar","name_en"],"filters":["program","status","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"initiative":{"page":"vro_initiatives","icon":"flag","codeInLabel":true,"title":{"en":"Initiatives","ar":"المبادرات"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"New initiative","ar":"مبادرة جديدة"},"cols":["code","name_ar","objective","status","sector","active"],"search":["code","name_ar","name_en"],"filters":["status","objective","sector","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"filter":{"status":"@initiative_status_02"}},{"filter":{"status":"@initiative_status_04"}},{"filter":{"status":"@initiative_status_05"}}]},"project":{"page":"vro_projects","icon":"folder","codeInLabel":true,"title":{"en":"Projects","ar":"المشاريع"},"crumb":{"en":"Projects register","ar":"سجل المشاريع"},"add":{"en":"New project","ar":"مشروع جديد"},"cols":["code","name_ar","initiative","status","progress","active"],"search":["code","name_ar","name_en"],"filters":["status","initiative","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"filter":{"status":"@project_status_03"}},{"filter":{"status":"@project_status_01"}},{"filter":{"status":"@project_status_02"}}]},"org_unit":{"page":"vro_org_units","icon":"users","title":{"en":"Organisation units","ar":"الوحدات التنظيمية"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add unit","ar":"إضافة وحدة"},"cols":["code","name_ar","name_en","unit_type","parent","active"],"search":["code","name_ar","name_en"],"filters":["unit_type","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"label":{"en":"Agencies","ar":"الوكالات"},"filter":{"unit_type":"agency"}},{"label":{"en":"Sectors","ar":"القطاعات"},"filter":{"unit_type":"sector"}}]},"lookup_value":{"page":"vro_lookup_values","icon":"sliders","title":{"en":"Lookup values","ar":"قيم القوائم"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add value","ar":"إضافة قيمة"},"cols":["type","code","name_ar","name_en","order","active"],"search":["code","name_ar","name_en"],"filters":["type","active"],"sort":["type","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"lookup_type":{"page":"vro_lookup_types","icon":"sliders","title":{"en":"Lookup types","ar":"أنواع القوائم"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add type","ar":"إضافة نوع"},"cols":["code","name_ar","name_en","active"],"search":["code","name_ar","name_en"],"filters":["active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]}},"lookups":{"objective.status":"objective_status","initiative.status":"initiative_status","project.status":"project_status"},"menu":{"title":"VRO main menu","items":[{"label":{"en":"Home","ar":"الرئيسية"},"page":"vro_home","icon":"home","color":"c1"},{"label":{"en":"Strategies","ar":"الإستراتيجيات"},"page":"vro_strategies","icon":"flag","color":"c1"},{"label":{"en":"Programmes","ar":"البرامج"},"page":"vro_programs","icon":"layers","color":"c2"},{"label":{"en":"Objectives","ar":"الأهداف"},"page":"vro_objectives","icon":"target","color":"c3"},{"label":{"en":"Initiatives","ar":"المبادرات"},"page":"vro_initiatives","icon":"bulb","color":"c4"},{"label":{"en":"Projects","ar":"المشاريع"},"page":"vro_projects","icon":"folder","color":"c1"},{"label":{"en":"Organisation units","ar":"الوحدات التنظيمية"},"page":"vro_org_units","icon":"org","color":"c2","more":true},{"label":{"en":"Lookup values","ar":"قيم القوائم"},"page":"vro_lookup_values","icon":"list","color":"c3","more":true},{"label":{"en":"Lookup types","ar":"أنواع القوائم"},"page":"vro_lookup_types","icon":"tag","color":"c5","more":true}]}};
+  var scope = gs.getCurrentScopeName();
+  data.name = String(gs.getUserDisplayName() || '');
+  data.cards = [];
+  UI.pages.forEach(function (p) {
+    if (p.widget !== 'vro_table' || !p.options) { return; }
+    var tn = p.options.table, ga = new GlideAggregate(scope + '_' + tn);
+    ga.addAggregate('COUNT'); ga.query();
+    var n = ga.next() ? parseInt(ga.getAggregate('COUNT'), 10) : 0;
+    var mi = null;
+    ((UI.menu && UI.menu.items) || []).forEach(function (m) { if (m.page === p.id) { mi = m; } });
+    data.cards.push({ page: p.id, title: UI.tables[tn].title, count: n, icon: mi ? (mi.icon || 'dot') : 'dot', color: mi ? (mi.color || 'c1') : 'c1', key: tn });
+  });
+})();
+]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-11 13:19:52</sys_created_on>
+        <sys_id>ae09b76c2fa81350bdca5b707fa4e3ed</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>VRO Home</sys_name>
+        <sys_package display_value="VRO-APP" source="x_1799784_vro_app">49aea3a42f681350bdca5b707fa4e329</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="VRO-APP">49aea3a42f681350bdca5b707fa4e329</sys_scope>
+        <sys_update_name>sp_widget_ae09b76c2fa81350bdca5b707fa4e3ed</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-11 13:52:55</sys_updated_on>
+        <template><![CDATA[<div class="vro-home" ng-class="{dark: c.dark}" dir="{{c.ar ? 'rtl' : 'ltr'}}">
+  <section class="vh-hero">
+    <div>
+      <h1>{{c.ar ? 'مرحباً ' : 'Hello '}}{{c.data.name}}</h1>
+      <p>{{c.ar ? 'نظام إدارة الاستراتيجية والمبادرات والمشاريع (EPM). اختر قسماً من البطاقات أدناه.' : 'Enterprise performance management for strategies, initiatives and projects. Pick a section from the cards below.'}}</p>
+      <div class="vh-cta">
+        <a class="vh-b w" ng-href="?id=vro_initiatives">{{c.ar ? 'المبادرات' : 'Initiatives'}}</a>
+        <a class="vh-b g" ng-href="?id=vro_projects">{{c.ar ? 'المشاريع' : 'Projects'}}</a>
+      </div>
+    </div>
+    <div class="vh-big">
+      <div><b>{{c.num(c.big('initiative'))}}</b><span>{{c.ar ? 'مبادرة' : 'Initiatives'}}</span></div>
+      <div><b>{{c.num(c.big('project'))}}</b><span>{{c.ar ? 'مشروع' : 'Projects'}}</span></div>
+      <div><b>{{c.num(c.big('objective'))}}</b><span>{{c.ar ? 'هدف' : 'Objectives'}}</span></div>
+    </div>
+  </section>
+  <h2 class="vh-h">{{c.ar ? 'الأقسام' : 'Sections'}}</h2>
+  <div class="vh-cards">
+    <a class="vh-card" ng-repeat="x in c.data.cards" ng-href="?id={{x.page}}">
+      <span class="vh-ico {{x.color}}" ng-bind-html="c.icon(x.icon)"></span>
+      <span class="vh-tx"><b>{{c.num(x.count)}}</b><span>{{c.lab(x.title)}}</span></span>
+    </a>
+  </div>
+</div>
+]]></template>
+    </sp_widget>
+</record_update>

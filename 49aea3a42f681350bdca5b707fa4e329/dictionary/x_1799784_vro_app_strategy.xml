@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="cfae2ba42f681350bdca5b707fa4e32c" label="Strategy" max_length="40" name="x_1799784_vro_app_strategy" type="collection">
+        <element label="Description" max_length="1000" name="description" type="string"/>
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element label="Code" mandatory="true" max_length="40" name="code" type="string" unique="true"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="500" name="name_ar" type="string"/>
+        <element label="Strategy type" max_length="20" name="strategy_type" type="string"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <element label="English name" mandatory="true" max_length="500" name="name_en" type="string"/>
+    </element>
+</database>

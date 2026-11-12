@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="81aee3a42f681350bdca5b707fa4e365" label="نوع القائمة" max_length="40" name="x_1799784_vro_app_lookup_type" type="collection">
+        <element label="English name" mandatory="true" max_length="200" name="name_en" type="string"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <element label="Code" mandatory="true" max_length="80" name="code" type="string" unique="true"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="200" name="name_ar" type="string"/>
+        <element label="Legacy table" max_length="120" name="legacy_table" type="string"/>
+    </element>
+</database>

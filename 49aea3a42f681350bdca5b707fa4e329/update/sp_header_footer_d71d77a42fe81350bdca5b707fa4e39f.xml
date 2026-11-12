@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_header_footer">
+    <sp_header_footer action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller=function() {  /* widget controller */  var c = this;};]]></client_script>
+        <controller_as>c</controller_as>
+        <css/>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id/>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>VRO Header</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {  /* populate the 'data' object */  /* e.g., data.table = $sp.getValue('table'); */})();]]></script>
+        <servicenow>false</servicenow>
+        <static>false</static>
+        <sys_class_name>sp_header_footer</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-11 13:37:40</sys_created_on>
+        <sys_id>d71d77a42fe81350bdca5b707fa4e39f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>VRO Header</sys_name>
+        <sys_package display_value="VRO-APP" source="x_1799784_vro_app">49aea3a42f681350bdca5b707fa4e329</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="VRO-APP">49aea3a42f681350bdca5b707fa4e329</sys_scope>
+        <sys_update_name>sp_header_footer_d71d77a42fe81350bdca5b707fa4e39f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-11 13:37:40</sys_updated_on>
+        <template><![CDATA[<div><!-- your widget template --></div>]]></template>
+    </sp_header_footer>
+</record_update>

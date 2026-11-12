@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="fcbe2fa42f681350bdca5b707fa4e34f" label="مبادرة" max_length="40" name="x_1799784_vro_app_initiative" type="collection">
+        <element label="Initiative code" mandatory="true" max_length="60" name="code" type="string" unique="true"/>
+        <element label="Start date" max_length="40" name="start_date" type="glide_date"/>
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element label="English name" mandatory="true" max_length="500" name="name_en" type="string"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="500" name="name_ar" type="string"/>
+        <element label="Status" max_length="32" name="status" reference="x_1799784_vro_app_lookup_value" type="reference"/>
+        <element label="Owning sector" max_length="32" name="sector" reference="x_1799784_vro_app_org_unit" type="reference"/>
+        <element label="Objective" max_length="32" name="objective" reference="x_1799784_vro_app_objective" type="reference"/>
+        <element label="End date" max_length="40" name="end_date" type="glide_date"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <index name="index">
+            <element name="objective"/>
+        </index>
+        <index name="index2">
+            <element name="sector"/>
+        </index>
+        <index name="index3">
+            <element name="status"/>
+        </index>
+    </element>
+</database>

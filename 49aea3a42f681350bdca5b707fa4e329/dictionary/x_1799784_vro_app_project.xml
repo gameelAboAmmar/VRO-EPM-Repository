@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="1dbeafa42f681350bdca5b707fa4e33c" label="مشروع" max_length="40" name="x_1799784_vro_app_project" type="collection">
+        <element label="Initiative" max_length="32" name="initiative" reference="x_1799784_vro_app_initiative" type="reference"/>
+        <element label="Target start" max_length="40" name="target_start" type="glide_date"/>
+        <element label="Project status" max_length="32" name="status" reference="x_1799784_vro_app_lookup_value" type="reference"/>
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element default="0" label="Progress %" max_length="40" name="progress" type="integer"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <element label="English name" mandatory="true" max_length="500" name="name_en" type="string"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="500" name="name_ar" type="string"/>
+        <element label="Project code" mandatory="true" max_length="60" name="code" type="string" unique="true"/>
+        <element label="Target finish" max_length="40" name="target_finish" type="glide_date"/>
+        <index name="index">
+            <element name="initiative"/>
+        </index>
+        <index name="index2">
+            <element name="status"/>
+        </index>
+    </element>
+</database>

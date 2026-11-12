@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_theme">
+    <sp_theme action="INSERT_OR_UPDATE">
+        <css_variables>$brand-primary: #1B8354;
+$brand-success: #1B8354;
+$brand-info: #2f7fc1;
+$brand-warning: #F89406;
+$brand-danger: #C0392B;
+$navbar-inverse-bg: #003462;
+$navbar-inverse-link-color: #ffffff;
+$navbar-inverse-link-hover-color: #60B87C;
+$navbar-inverse-link-active-bg: #1B8354;
+$body-bg: #F3F7F5;
+$text-color: #17304a;
+$link-color: #1B8354;
+$font-family-base: 'Segoe UI', Tahoma, Arial, sans-serif;
+</css_variables>
+        <footer display_value="Portal Next Experience Footer">5cf9e3234305ce107b228dc226b8f2a2</footer>
+        <footer_fixed>false</footer_fixed>
+        <header/>
+        <icon/>
+        <logo/>
+        <logo_alt_text/>
+        <matching_now_experience_theme/>
+        <name>VRO theme</name>
+        <navbar_fixed>false</navbar_fixed>
+        <sys_class_name>sp_theme</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-11 13:19:53</sys_created_on>
+        <sys_id>43093b6c2fa81350bdca5b707fa4e3ad</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>VRO theme</sys_name>
+        <sys_package display_value="VRO-APP" source="x_1799784_vro_app">49aea3a42f681350bdca5b707fa4e329</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="VRO-APP">49aea3a42f681350bdca5b707fa4e329</sys_scope>
+        <sys_update_name>sp_theme_43093b6c2fa81350bdca5b707fa4e3ad</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-11 13:42:19</sys_updated_on>
+        <turn_off_scss_compilation>false</turn_off_scss_compilation>
+    </sp_theme>
+</record_update>

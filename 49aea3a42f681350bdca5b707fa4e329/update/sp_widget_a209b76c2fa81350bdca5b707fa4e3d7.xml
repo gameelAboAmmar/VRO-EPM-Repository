@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[api.controller = function ($scope, $element, $timeout) {
+  var c = this;
+  $timeout(function () { start($element[0].querySelector('.vro')); }, 0);
+
+  function start(root) {
+    if (!root) { return; }
+    if (c.data.error) { root.innerHTML = '<div class="vro-err">' + String(c.data.error).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }) + '</div>'; return; }
+    var CFG = c.data.cfg;
+    var store = {}; try { store = window.localStorage; } catch (e) { store = {}; }
+    function sget(k, d) { try { return store.getItem(k) || d; } catch (e2) { return d; } }
+    function sset(k, v) { try { store.setItem(k, v); } catch (e3) { } }
+    var S = { lang: sget('vroLang', CFG.lang), theme: sget('vroTheme', 'light'), q: '', filters: {}, sort: [CFG.sort[0], CFG.sort[1]], page: 1, size: 10, more: false, rows: c.data.first.rows, total: c.data.first.total, loading: false, drawer: null, confirm: null, menu: null, toast: '', tiles: CFG.tiles, busy: false };
+    var AR = function () { return S.lang === 'ar'; };
+    var D = {
+      search: ['ابحث بالرمز أو الاسم', 'Search by code or name'], clear: ['مسح', 'Clear'], more: ['مزيد من المرشحات', 'More filters'], less: ['إخفاء المرشحات', 'Hide filters'],
+      results: ['النتائج', 'Results'], of: ['من', 'of'], perpage: ['عدد الصفوف', 'Rows per page'], none: ['لا توجد نتائج', 'No results'], nonehint: ['جرّب كلمة أخرى أو امسح المرشحات', 'Try another word or clear the filters'],
+      actions: ['الإجراء', 'Actions'], view: ['عرض', 'View'], edit: ['تعديل', 'Edit'], del: ['حذف', 'Delete'], save: ['حفظ', 'Save'], cancel: ['إلغاء', 'Cancel'], activate: ['تفعيل', 'Activate'], deactivate: ['تعطيل', 'Deactivate'],
+      yes: ['نعم', 'Yes'], no: ['لا', 'No'], all: ['الكل', 'All'], choose: ['-- اختر --', '-- Select --'], sure: ['هل أنت متأكد؟', 'Are you sure?'], delq: ['سيتم حذف هذا السجل ولا يمكن التراجع.', 'This record will be deleted. This cannot be undone.'],
+      saved: ['تم الحفظ', 'Saved'], created: ['تمت الإضافة', 'Created'], deleted: ['تم الحذف', 'Deleted'], updated: ['تم التحديث', 'Updated'], error: ['تعذر تنفيذ العملية', 'The operation failed'], loading: ['جار التحميل…', 'Loading…'],
+      home: ['الرئيسية', 'Home'], active: ['فعال', 'Active'], readonly: ['للعرض فقط', 'View only'], required: ['يرجى تصحيح الحقول المظللة', 'Please fix the highlighted fields']
+    };
+    function t(k) { var v = D[k]; return v ? v[AR() ? 0 : 1] : k; }
+    function N(n) { return AR() ? String(n).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.charAt(d); }) : String(n); }
+    function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); }
+    function lab(o) { return o ? (AR() ? (o.ar || o.en) : (o.en || o.ar)) : ''; }
+    var IC = {
+      search: '<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/>', plus: '<path d="M12 5v14M5 12h14"/>', edit: '<path d="M4 20l1-4L16 5l3 3L8 19z"/>', trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>', eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+      x: '<path d="M6 6l12 12M18 6L6 18"/>', check: '<path d="M5 12l5 5 9-10"/>', dots: '<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',
+      filter: '<path d="M4 5h16l-6 7v6l-4 2v-8z"/>', refresh: '<path d="M20 11a8 8 0 00-14-4L4 9M4 13a8 8 0 0014 4l2-2M4 4v5h5M20 20v-5h-5"/>', moon: '<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>',
+      sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>', globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+      layers: '<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/>', flag: '<path d="M6 21V4M6 5h12l-2.5 4L18 13H6"/>', folder: '<path d="M3 6a1 1 0 011-1h5l2 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>',
+      target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>', users: '<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c3 0 4.5 2 4.5 5"/>',
+      sliders: '<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="17" r="2" fill="currentColor"/>', up: '<path d="M12 19V5M6 11l6-6 6 6"/>'
+    };
+    function ic(n, s) { s = s || 18; return '<svg class="ic" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (IC[n] || '') + '</svg>'; }
+
+    function field(name) { for (var i = 0; i < CFG.fields.length; i++) { if (CFG.fields[i].name === name) { return CFG.fields[i]; } } return null; }
+    function colLabel(col) { return AR() ? col.labelAr : col.labelEn; }
+    function pageHref(id) { return '?id=' + id; }
+
+    // ---- formatting of one cell ----
+    function fmt(col, row) {
+      var cl = row.f[col.name]; if (!cl) { return ''; }
+      if (col.type === 'boolean') { return cl.v === 'true' ? '<span class="vro-yes">' + ic('check', 20) + '</span>' : '<span class="vro-no">' + ic('x', 18) + '</span>'; }
+      if (col.name === 'code') { return '<span class="mono">' + esc(cl.d) + '</span>'; }
+      if (col.name === 'progress') { var p = Math.max(0, Math.min(100, parseInt(cl.v, 10) || 0)); return '<div class="pb"><i style="width:' + p + '%"></i></div><b class="pn">' + N(p) + (AR() ? '٪' : '%') + '</b>'; }
+      if (col.name === 'status') { return cl.d ? '<span class="chip">' + esc(cl.d) + '</span>' : '<span class="mut">—</span>'; }
+      if (col.name === 'name_ar' || col.name === 'name_en') { return '<span class="nm">' + esc(cl.d) + '</span>'; }
+      if (col.choices) { return '<span class="chip b">' + esc(cl.d) + '</span>'; }
+      return cl.d ? esc(cl.d) : '<span class="mut">—</span>';
+    }
+
+    // ---- selects ----
+    function optionsFor(name) {
+      var f = field(name), out = [];
+      if (f.type === 'boolean') { return [{ v: 'true', d: t('yes') }, { v: 'false', d: t('no') }]; }
+      if (f.choices) { for (var i = 0; i < f.choices.length; i++) { out.push({ v: f.choices[i][0], d: AR() ? (f.choices[i][2] || f.choices[i][1]) : f.choices[i][1] }); } return out; }
+      return CFG.opts[name] || [];
+    }
+    function select(name, value, attr, first) {
+      var o = optionsFor(name), h = '<select class="sel" ' + attr + '><option value="">' + esc(first) + '</option>';
+      for (var i = 0; i < o.length; i++) { h += '<option value="' + esc(o[i].v) + '"' + (String(value) === String(o[i].v) ? ' selected' : '') + '>' + esc(o[i].d) + '</option>'; }
+      return h + '</select>';
+    }
+
+    // ---- shell ----
+    function activeTile(tl) { var a = JSON.stringify(tl.filter), b = JSON.stringify(S.filters); return a === b && !S.q; }
+    function tilesHtml() {
+      var h = '';
+      for (var i = 0; i < S.tiles.length; i++) { var tl = S.tiles[i]; h += '<a class="' + (activeTile(tl) ? 'on' : '') + '" data-a="tile" data-i="' + i + '"><span class="ti">' + ic(i === 0 ? CFG.icon : 'check', 20) + '</span><div><b>' + N(tl.count) + '</b><span>' + esc(lab(tl.label)) + '</span></div></a>'; }
+      return h;
+    }
+    function filtersHtml() {
+      var quick = CFG.filters.slice(0, 2), more = CFG.filters.slice(2), h = '<div class="frow"><label class="sinp">' + ic('search', 18) + '<input id="vro-q" value="' + esc(S.q) + '" placeholder="' + esc(t('search')) + '" autocomplete="off"></label>';
+      quick.forEach(function (n) { h += select(n, S.filters[n], 'data-f="' + n + '"', field(n).label[AR() ? 'ar' : 'en'] + ': ' + t('all')); });
+      if (more.length) { h += '<button class="btn l" data-a="more">' + ic('filter', 18) + ' ' + (S.more ? t('less') : t('more')) + '</button>'; }
+      h += '<button class="btn o" data-a="clear">' + ic('refresh', 18) + ' ' + t('clear') + '</button></div>';
+      if (more.length) { h += '<div class="mf' + (S.more ? ' open' : '') + '">'; more.forEach(function (n) { h += '<label>' + esc(field(n).label[AR() ? 'ar' : 'en']) + select(n, S.filters[n], 'data-f="' + n + '"', t('all')) + '</label>'; }); h += '</div>'; }
+      return h;
+    }
+    function shell() {
+      root.className = 'vro' + (S.theme === 'dark' ? ' dark' : ''); root.setAttribute('dir', AR() ? 'rtl' : 'ltr');
+      root.innerHTML = '<section class="hero"><div class="hh"><div><h1>' + esc(lab(CFG.title)) + '</h1><div class="crumb">' + esc(t('home')) + ' · ' + esc(lab(CFG.crumb)) + ' · ' + esc(lab(CFG.title)) + '</div></div><div class="acts">' + (CFG.can.create ? '<button class="btn hw" data-a="new">' + ic('plus', 18) + ' ' + esc(lab(CFG.add)) + '</button>' : '') + '</div></div><div class="tiles" id="vro-tiles">' + tilesHtml() + '</div></section>' +
+        '<div class="card fbar" id="vro-filters">' + filtersHtml() + '</div><div class="card tcard" id="vro-res"></div><div id="vro-drawer"></div><div id="vro-modal"></div><div id="vro-toast"></div>';
+      results(); drawer(); modal();
+    }
+    function results() {
+      var box = root.querySelector('#vro-res'); if (!box) { return; }
+      var pages = Math.max(1, Math.ceil(S.total / S.size)), h = '<div class="rh"><b>' + t('results') + ': ' + N(S.total) + '</b><span class="mut">' + (S.total ? N((S.page - 1) * S.size + 1) + '–' + N(Math.min(S.page * S.size, S.total)) + ' ' + t('of') + ' ' + N(S.total) : '') + '</span>' + (S.loading ? '<span class="mut">' + t('loading') + '</span>' : '') + '</div>';
+      if (!S.rows.length) { box.innerHTML = h + '<div class="empty"><div class="ei">' + ic('search', 30) + '</div><b>' + t('none') + '</b>' + t('nonehint') + '</div>'; return; }
+      h += '<div style="overflow:auto"><table class="tbl"><thead><tr>';
+      CFG.cols.forEach(function (col) { var on = S.sort[0] === col.name; h += '<th class="s' + (on ? ' on' : '') + '" data-a="sort" data-k="' + col.name + '">' + esc(colLabel(col)) + '<span class="sa">' + ic('up', 13).replace('<svg', '<svg style="transform:' + (on && S.sort[1] === 'desc' ? 'rotate(180deg)' : 'none') + '"') + '</span></th>'; });
+      h += '<th style="width:56px">' + t('actions') + '</th></tr></thead><tbody>';
+      S.rows.forEach(function (row) {
+        h += '<tr class="rw" data-a="open" data-id="' + row.id + '">';
+        CFG.cols.forEach(function (col, i) { h += '<td class="' + (i === 0 ? 'first' : '') + '" data-l="' + esc(colLabel(col)) + '">' + fmt(col, row) + '</td>'; });
+        h += '<td class="ac" data-a="none"><button class="dots" data-a="menu" data-id="' + row.id + '">' + ic('dots', 20) + '</button>' + (S.menu === row.id ? rowMenu(row) : '') + '</td></tr>';
+      });
+      h += '</tbody></table></div><div class="pg"><span class="mut">' + t('perpage') + '</span><select class="sel q" id="vro-size">';
+      [10, 25, 50].forEach(function (n) { h += '<option' + (S.size === n ? ' selected' : '') + '>' + n + '</option>'; });
+      h += '</select><div class="nums"><button data-a="pg" data-p="' + (S.page - 1) + '"' + (S.page <= 1 ? ' disabled' : '') + '>' + (AR() ? '›' : '‹') + '</button>';
+      var shown = []; for (var p = 1; p <= pages; p++) { if (p === 1 || p === pages || Math.abs(p - S.page) <= 1) { shown.push(p); } else if (shown[shown.length - 1] !== 0) { shown.push(0); } }
+      shown.forEach(function (p2) { h += p2 === 0 ? '<span class="gap">…</span>' : '<button class="' + (p2 === S.page ? 'on' : '') + '" data-a="pg" data-p="' + p2 + '">' + N(p2) + '</button>'; });
+      h += '<button data-a="pg" data-p="' + (S.page + 1) + '"' + (S.page >= pages ? ' disabled' : '') + '>' + (AR() ? '‹' : '›') + '</button></div></div>';
+      box.innerHTML = h;
+      if (S.menu) { placeMenu(); }
+    }
+    function rowMenu(row) {
+      var h = '<div class="rmenu"><button data-a="open" data-id="' + row.id + '">' + ic('eye') + ' ' + t('view') + '</button>';
+      if (row.can.w) { h += '<button data-a="edit" data-id="' + row.id + '">' + ic('edit') + ' ' + t('edit') + '</button>'; if (row.f.active) { h += '<button data-a="toggle" data-id="' + row.id + '">' + ic(row.f.active.v === 'true' ? 'x' : 'check') + ' ' + (row.f.active.v === 'true' ? t('deactivate') : t('activate')) + '</button>'; } }
+      if (row.can.d) { h += '<button class="dng" data-a="del" data-id="' + row.id + '">' + ic('trash') + ' ' + t('del') + '</button>'; }
+      return h + '</div>';
+    }
+    // the menu is fixed to the viewport so no table or card can clip it
+    function placeMenu() {
+      var m = root.querySelector('.rmenu'), b = root.querySelector('.dots[data-id="' + S.menu + '"]'); if (!m || !b) { return; }
+      var r = b.getBoundingClientRect(); m.style.position = 'fixed'; var h = m.offsetHeight, w = m.offsetWidth, top = r.bottom + 4;
+      if (top + h > window.innerHeight - 8) { top = Math.max(8, r.top - h - 4); }
+      var left = AR() ? r.left : r.right - w; left = Math.min(Math.max(8, left), window.innerWidth - w - 8);
+      m.style.top = top + 'px'; m.style.left = left + 'px'; m.style.zIndex = 1080;
+    }
+
+    // ---- drawer (view and form) ----
+    function rowById(id) { for (var i = 0; i < S.rows.length; i++) { if (S.rows[i].id === id) { return S.rows[i]; } } return null; }
+    function drawer() {
+      var box = root.querySelector('#vro-drawer'); if (!box) { return; }
+      var d = S.drawer; if (!d) { box.innerHTML = ''; return; }
+      var h = '<div class="scrim" data-a="dclose"></div><aside class="drawer"><div class="dh"><div style="flex:1"><h2>' + esc(d.mode === 'new' ? lab(CFG.add) : (d.mode === 'edit' ? t('edit') : t('view'))) + '</h2><small>' + esc(lab(CFG.title)) + '</small></div><button class="ib" data-a="dclose">' + ic('x') + '</button></div><div class="db">';
+      if (d.mode === 'view') {
+        var row = rowById(d.id); h += '<dl class="dl">';
+        CFG.fields.forEach(function (f) { var cl = row.f[f.name]; var v = f.type === 'boolean' ? (cl.v === 'true' ? t('yes') : t('no')) : (cl.d || '—'); h += '<dt>' + esc(f.label[AR() ? 'ar' : 'en']) + '</dt><dd>' + esc(v) + '</dd>'; });
+        h += '</dl></div><div class="df">' + (row.can.w ? '<button class="btn" data-a="edit" data-id="' + d.id + '">' + ic('edit') + ' ' + t('edit') + '</button>' : '') + (row.can.d ? '<button class="btn r" data-a="del" data-id="' + d.id + '">' + ic('trash') + ' ' + t('del') + '</button>' : '') + '</div></aside>';
+      } else {
+        CFG.fields.forEach(function (f) {
+          if (!f.form) { return; }
+          var v = d.vals[f.name], er = d.errors && d.errors[f.name], lb = esc(f.label[AR() ? 'ar' : 'en']) + (f.mandatory ? ' <span class="req">*</span>' : ''), ctl;
+          if (f.type === 'boolean') { ctl = '<div class="tgl' + (v === 'true' ? ' on' : '') + '" data-a="tg" data-k="' + f.name + '"><i></i><span>' + (v === 'true' ? t('yes') : t('no')) + '</span></div>'; }
+          else if (f.type === 'reference' || f.choices) { ctl = select(f.name, v, 'data-v="' + f.name + '"', t('choose')); }
+          else if (f.type === 'string' && f.length > 200) { ctl = '<textarea class="inp" data-v="' + f.name + '" rows="3">' + esc(v) + '</textarea>'; }
+          else { ctl = '<input class="inp" data-v="' + f.name + '" type="' + (f.type === 'integer' ? 'number' : (f.type === 'glide_date' ? 'date' : 'text')) + '" value="' + esc(v) + '"' + (f.name === 'code' ? ' dir="ltr"' : '') + '>'; }
+          h += '<div class="fld' + (er ? ' bad' : '') + '"><label>' + lb + '</label>' + ctl + (er ? '<span class="err">' + esc(er) + '</span>' : '') + '</div>';
+        });
+        h += (d.error ? '<div class="err" style="display:block">' + esc(d.error) + '</div>' : '') + '</div><div class="df"><button class="btn" data-a="save"' + (S.busy ? ' disabled' : '') + '>' + ic('check') + ' ' + t('save') + '</button><button class="btn l" data-a="dclose">' + t('cancel') + '</button></div></aside>';
+      }
+      box.innerHTML = h;
+    }
+    function collect() { var v = {}; for (var k in S.drawer.vals) { v[k] = S.drawer.vals[k]; } [].forEach.call(root.querySelectorAll('[data-v]'), function (e) { v[e.getAttribute('data-v')] = e.value; }); return v; }
+    function modal() {
+      var box = root.querySelector('#vro-modal'); if (!box) { return; }
+      if (!S.confirm) { box.innerHTML = ''; return; }
+      var row = rowById(S.confirm), nm = row ? (row.f.name_ar ? row.f['name_' + (AR() ? 'ar' : 'en')].d : row.f.code ? row.f.code.d : '') : '';
+      box.innerHTML = '<div class="modal"><div class="mbox"><div class="mi">' + ic('trash', 28) + '</div><h3>' + t('sure') + '</h3><p><b>' + esc(nm) + '</b><br>' + t('delq') + '</p><div class="row"><button class="btn rd" data-a="delok">' + ic('trash') + ' ' + t('del') + '</button><button class="btn l" data-a="delno">' + t('cancel') + '</button></div></div></div>';
+    }
+    function toast(m) { var b = root.querySelector('#vro-toast'); if (!b) { return; } b.innerHTML = '<div class="toast">' + esc(m) + '</div>'; clearTimeout(toast.tm); toast.tm = setTimeout(function () { b.innerHTML = ''; }, 2600); }
+
+    // ---- server calls ----
+    function call(payload, done) { payload.table = CFG.table; c.server.get(payload).then(function (r) { done((r.data && r.data.result) || { ok: false, error: t('error') }); }, function () { S.loading = false; results(); toast(t('error')); }); }
+    function refresh(keepPage) {
+      if (!keepPage) { S.page = 1; }
+      S.loading = true; results();
+      call({ action: 'list', q: S.q, filters: S.filters, sort: S.sort[0], dir: S.sort[1], page: S.page, size: S.size }, function (r) {
+        S.loading = false; S.rows = r.rows || []; S.total = r.total || 0; S.page = r.page || 1; results();
+        call({ action: 'cfg' }, function (cf) { if (cf && cf.tiles) { S.tiles = cf.tiles; var tb = root.querySelector('#vro-tiles'); if (tb) { tb.innerHTML = tilesHtml(); } } });
+      });
+    }
+    function blank() { var v = {}; CFG.fields.forEach(function (f) { v[f.name] = f.type === 'boolean' ? (f.def || 'true') : (f.def || ''); }); return v; }
+    function open(mode, id) {
+      S.menu = null;
+      if (mode === 'edit') { var row = rowById(id), vals = {}; CFG.fields.forEach(function (f) { vals[f.name] = row.f[f.name].v; }); S.drawer = { mode: 'edit', id: id, vals: vals, errors: null, error: '' }; }
+      else if (mode === 'new') { S.drawer = { mode: 'new', id: '', vals: blank(), errors: null, error: '' }; }
+      else { S.drawer = { mode: 'view', id: id }; }
+      results(); drawer();
+    }
+    function save() {
+      var d = S.drawer; d.vals = collect(); S.busy = true; d.error = '';
+      call({ action: 'save', id: d.id, values: d.vals }, function (r) {
+        S.busy = false;
+        if (r.ok) { S.drawer = null; drawer(); toast(r.created ? t('created') : t('saved')); refresh(true); }
+        else { d.errors = r.errors || null; d.error = r.errors ? t('required') : (r.error || t('error')); drawer(); var bad = root.querySelector('.fld.bad'); if (bad && bad.scrollIntoView) { bad.scrollIntoView({ block: 'center' }); } }
+      });
+    }
+
+    // ---- events ----
+    root.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-a]');
+      if (!a) { if (S.menu) { S.menu = null; results(); } return; }
+      var k = a.getAttribute('data-a'), id = a.getAttribute('data-id');
+      if (k === 'none') { e.stopPropagation(); return; }
+      if (k === 'menu') { e.stopPropagation(); S.menu = S.menu === id ? null : id; results(); }
+      else if (k === 'open') { open('view', id); }
+      else if (k === 'edit') { open('edit', id); }
+      else if (k === 'new') { open('new'); }
+      else if (k === 'dclose') { S.drawer = null; drawer(); }
+      else if (k === 'save') { save(); }
+      else if (k === 'tg') { S.drawer.vals = collect(); var kk = a.getAttribute('data-k'); S.drawer.vals[kk] = S.drawer.vals[kk] === 'true' ? 'false' : 'true'; drawer(); }
+      else if (k === 'del') { S.menu = null; S.confirm = id; results(); modal(); }
+      else if (k === 'delno') { S.confirm = null; modal(); }
+      else if (k === 'delok') { var rid = S.confirm; S.confirm = null; modal(); call({ action: 'remove', id: rid }, function (r) { if (r.ok) { S.drawer = null; drawer(); toast(t('deleted')); refresh(true); } else { toast(r.error || t('error')); } }); }
+      else if (k === 'toggle') { S.menu = null; call({ action: 'toggle', id: id }, function (r) { if (r.ok) { toast(t('updated')); refresh(true); } else { toast(r.error || t('error')); } }); }
+      else if (k === 'sort') { var col = a.getAttribute('data-k'); S.sort = [col, S.sort[0] === col && S.sort[1] === 'asc' ? 'desc' : 'asc']; refresh(); }
+      else if (k === 'pg') { var p = parseInt(a.getAttribute('data-p'), 10); if (p >= 1) { S.page = p; refresh(true); } }
+      else if (k === 'more') { S.more = !S.more; var fb = root.querySelector('#vro-filters'); fb.innerHTML = filtersHtml(); }
+      else if (k === 'clear') { S.q = ''; S.filters = {}; shell(); refresh(); }
+      else if (k === 'tile') { var tl = S.tiles[parseInt(a.getAttribute('data-i'), 10)]; S.q = ''; S.filters = JSON.parse(JSON.stringify(tl.filter)); shell(); refresh(); }
+      else if (k === 'lang') { S.lang = AR() ? 'en' : 'ar'; sset('vroLang', S.lang); shell(); }
+      else if (k === 'theme') { S.theme = S.theme === 'dark' ? 'light' : 'dark'; sset('vroTheme', S.theme); shell(); }
+    });
+    var timer = null;
+    root.addEventListener('input', function (e) { if (e.target.id === 'vro-q') { S.q = e.target.value; clearTimeout(timer); timer = setTimeout(function () { refresh(); }, 350); } });
+    root.addEventListener('change', function (e) {
+      var f = e.target.getAttribute && e.target.getAttribute('data-f');
+      if (f) { if (e.target.value === '') { delete S.filters[f]; } else { S.filters[f] = e.target.value; } refresh(); }
+      else if (e.target.id === 'vro-size') { S.size = parseInt(e.target.value, 10); refresh(); }
+    });
+    root.addEventListener('keydown', function (e) { if (e.key === 'Escape') { S.drawer = null; S.confirm = null; S.menu = null; drawer(); modal(); results(); } if (e.key === 'Enter' && e.target.getAttribute && e.target.getAttribute('data-v') && e.target.tagName === 'INPUT') { e.preventDefault(); save(); } });
+    window.addEventListener('scroll', function () { if (S.menu) { S.menu = null; results(); } }, true);
+    shell();
+  }
+};
+]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.vro { --card: #ffffff; --bg: #F3F7F5; --head: #003462; --green: #1B8354; --soft: #E6F2EC; --orange: #F89406; --red: #C0392B; --text: #17304a; --muted: #64788a; --line: #e2eae6; --solid: #ffffff; --sh: 0 10px 30px rgba(0,52,98,.08);
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: var(--text); display: grid; gap: 18px; padding: 8px 4px 70px; max-width: 1320px; margin: 0 auto; position: relative;
+  &gt; * { min-width: 0; }
+  .ic { flex: none; vertical-align: middle; }
+  input, select, textarea, button { font-family: inherit; font-size: 15px; }
+  textarea.inp { min-height: 64px; }
+  .mut { color: var(--muted); font-size: .9em; }
+  .vro-err { background: #fbe0dd; color: #a3271b; border-radius: 14px; padding: 16px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 99px; padding: 10px 20px; font-weight: 700; font-size: .95em; color: #fff; background: linear-gradient(135deg, #1B8354, #23a068); box-shadow: 0 6px 14px rgba(27,131,84,.25); white-space: nowrap; cursor: pointer; height: 46px; }
+  .btn.l { background: var(--solid); color: var(--head); border: 1.5px solid var(--line); box-shadow: none; }
+  .btn.o { background: linear-gradient(135deg, #F89406, #ffb347); color: #1b1b1b; box-shadow: none; }
+  .btn.r { background: var(--solid); color: var(--red); border: 1.5px solid #efc4be; box-shadow: none; }
+  .btn.rd { background: linear-gradient(135deg, #C0392B, #e0624f); box-shadow: none; }
+  .btn.hg { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); box-shadow: none; height: 42px; }
+  .btn.hw { background: #fff; color: #0f6b43; box-shadow: 0 8px 20px rgba(0,0,0,.18); height: 42px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--sh); }
+  .hero { background: linear-gradient(120deg, #003462 0%, #0d5c7a 52%, #1B8354 100%); color: #fff; border-radius: 26px; padding: 22px 26px; display: grid; gap: 16px; }
+  .hh { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+  .hh h1 { margin: 0; font-size: 1.9em; color: #fff; }
+  .crumb { color: #c9deea; font-size: .85em; margin-top: 4px; }
+  .acts { margin-inline-start: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .tiles a { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.13); border: 1.5px solid rgba(255,255,255,.22); border-radius: 18px; padding: 12px 14px; cursor: pointer; color: #fff; text-decoration: none; min-width: 0; }
+  .tiles a.on { background: rgba(255,255,255,.28); border-color: #fff; }
+  .tiles b { display: block; font-size: 1.7em; line-height: 1.05; }
+  .tiles span { font-size: .82em; color: #d4e6ef; }
+  .tiles .ti { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.18); flex: none; }
+  .fbar { padding: 16px 18px; display: grid; gap: 14px; }
+  .frow { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .sinp { flex: 1; min-width: 240px; display: flex; align-items: center; gap: 10px; border: 1.5px solid #c5d0d8; border-radius: 99px; padding: 0 18px; background: var(--solid); height: 46px; margin: 0; }
+  .sinp input { border: 0; outline: 0; background: transparent; flex: 1; height: 100%; min-width: 0; color: var(--text); }
+  .sel, .inp { border: 1.5px solid #c5d0d8; border-radius: 14px; padding: 0 12px; height: 46px; background: var(--solid); color: var(--text); width: 100%; min-width: 150px; }
+  .sel.q { width: auto; border-radius: 99px; height: 38px; min-width: 80px; }
+  textarea.inp { height: auto; padding: 10px 12px; }
+  .frow .sel { width: auto; border-radius: 99px; }
+  .mf { display: none; grid-template-columns: repeat(4, 1fr); gap: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .mf.open { display: grid; }
+  .mf label { display: grid; gap: 6px; font-weight: 700; font-size: .85em; color: var(--muted); }
+  .rh { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .tcard { overflow: hidden; }
+  table.tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { background: #f1f4f3; color: var(--muted); font-weight: 700; font-size: .85em; text-align: start; padding: 13px 16px; white-space: nowrap; user-select: none; }
+  .tbl th.s { cursor: pointer; }
+  .tbl th .sa { opacity: .35; margin-inline-start: 4px; }
+  .tbl th.on .sa { opacity: 1; color: var(--green); }
+  .tbl td { padding: 14px 16px; border-top: 1px solid var(--line); vertical-align: middle; line-height: 1.5; }
+  .tbl tr.rw { cursor: pointer; }
+  .tbl tr.rw:hover td { background: #f3faf6; }
+  .nm { font-weight: 700; color: var(--head); }
+  .mono { font-family: Consolas, monospace; direction: ltr; unicode-bidi: embed; white-space: nowrap; font-size: .9em; }
+  .chip { display: inline-block; border-radius: 99px; padding: 3px 12px; font-size: .8em; font-weight: 700; white-space: nowrap; background: #eceff2; color: var(--head); }
+  .chip.b { background: #e3ecf6; color: #003462; }
+  .vro-yes { color: var(--green); } .vro-no { color: var(--muted); }
+  .pb { display: inline-block; width: 90px; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; vertical-align: middle; }
+  .pb i { display: block; height: 100%; background: linear-gradient(90deg, #1B8354, #60B87C); }
+  .pn { font-size: .8em; margin-inline-start: 8px; }
+  .dots { width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+  .dots:hover { background: var(--soft); color: var(--head); }
+  .rmenu { min-width: 200px; background: var(--solid); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 50px rgba(0,52,98,.2); padding: 6px; }
+  .rmenu button { display: flex; gap: 10px; align-items: center; width: 100%; border: 0; background: none; text-align: start; padding: 10px 12px; border-radius: 10px; color: var(--text); cursor: pointer; }
+  .rmenu button:hover { background: var(--soft); }
+  .rmenu .dng { color: var(--red); }
+  .pg { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .nums { display: flex; gap: 6px; margin-inline-start: auto; align-items: center; }
+  .nums button { min-width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--solid); color: var(--text); font-weight: 700; cursor: pointer; }
+  .nums button.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .nums button:disabled { opacity: .4; cursor: default; }
+  .empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+  .empty .ei { width: 72px; height: 72px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; margin: 0 auto 12px; color: var(--green); }
+  .empty b { display: block; color: var(--head); margin-bottom: 4px; }
+  .scrim { position: fixed; inset: 0; background: rgba(0,20,40,.45); z-index: 1050; }
+  .drawer { position: fixed; top: 0; bottom: 0; inset-inline-end: 0; width: 560px; max-width: 100%; background: var(--solid); z-index: 1060; display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.25); }
+  .dh { display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px; background: linear-gradient(120deg, #003462, #0d5c7a 60%, #1B8354); color: #fff; }
+  .dh h2 { margin: 0; font-size: 1.25em; color: #fff; }
+  .dh small { color: #c9deea; }
+  .ib { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; cursor: pointer; padding: 0; }
+  .db { padding: 22px 24px; overflow: auto; flex: 1; display: grid; gap: 16px; align-content: start; }
+  .df { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .dl { display: grid; grid-template-columns: 150px 1fr; gap: 12px 14px; margin: 0; }
+  .dl dt { color: var(--muted); font-size: .88em; font-weight: 400; }
+  .dl dd { margin: 0; font-weight: 600; color: var(--head); word-break: break-word; }
+  .fld { display: grid; gap: 6px; }
+  .fld label { font-weight: 700; font-size: .92em; margin: 0; }
+  .req { color: var(--red); }
+  .fld .err { color: var(--red); font-size: .82em; font-weight: 600; }
+  .fld.bad .inp, .fld.bad .sel { border-color: var(--red); }
+  .tgl { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .tgl i { width: 44px; height: 26px; border-radius: 99px; background: #c5d0d8; position: relative; display: inline-block; }
+  .tgl i:after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .tgl.on i { background: var(--green); }
+  .tgl.on i:after { inset-inline-start: 21px; }
+  .modal { position: fixed; inset: 0; z-index: 1070; display: grid; place-items: center; padding: 20px; background: rgba(0,20,40,.45); }
+  .mbox { background: var(--solid); border-radius: 26px; max-width: 440px; width: 100%; padding: 28px; text-align: center; }
+  .mbox .mi { width: 60px; height: 60px; border-radius: 50%; background: #fbe0dd; color: var(--red); display: grid; place-items: center; margin: 0 auto 12px; }
+  .mbox h3 { margin: 0 0 6px; color: var(--head); }
+  .mbox p { color: var(--muted); margin: 0 0 18px; }
+  .mbox .row { display: flex; gap: 10px; justify-content: center; margin: 0; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #17304a; color: #fff; padding: 12px 20px; border-radius: 99px; z-index: 1090; box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+}
+.vro.dark { --card: #142636; --bg: #0B1824; --head: #E8F1F8; --soft: #173b30; --text: #dbe7f1; --muted: #8fa6ba; --line: #26425b; --solid: #152636; --sh: 0 10px 30px rgba(0,0,0,.35); background: #0B1824; border-radius: 20px; padding: 14px;
+  .tbl th { background: #1b3247; } .tbl tr.rw:hover td { background: #17304a; } .sel, .inp, .sinp { border-color: #34536e; }
+}
+@media (max-width: 900px) {
+  .vro .tiles { grid-template-columns: 1fr 1fr; }
+  .vro .mf { grid-template-columns: 1fr 1fr; }
+  .vro .dl { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .vro { padding: 4px 0 90px; }
+  .vro .hero { padding: 18px; border-radius: 22px; }
+  .vro .hh h1 { font-size: 1.5em; }
+  .vro .acts { width: 100%; }
+  .vro .tiles { gap: 8px; }
+  .vro .tiles .ti { display: none; }
+  .vro .sinp { min-width: 0; flex: 1 1 100%; }
+  .vro .frow .sel { flex: 1 1 100%; width: 100%; }
+  .vro .mf { grid-template-columns: 1fr; }
+  .vro .tbl thead { display: none; }
+  .vro .tbl, .vro .tbl tbody, .vro .tbl tr, .vro .tbl td { display: block; width: 100%; }
+  .vro .tbl tr.rw { border-top: 1px solid var(--line); padding: 44px 16px 12px; position: relative; }
+  .vro .tbl td { border: 0; padding: 4px 0; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  .vro .tbl td:before { content: attr(data-l); color: var(--muted); font-size: .8em; font-weight: 700; flex: none; }
+  .vro .tbl td.ac { position: absolute; top: 6px; inset-inline-end: 8px; width: auto; display: block; }
+  .vro .tbl td.ac:before { display: none; }
+  .vro .drawer { width: 100%; }
+  .vro .nums { margin-inline-start: 0; width: 100%; justify-content: center; }
+}
+</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>vro_table</id>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>VRO Table</name>
+        <option_schema>[{"name":"table","section":"Data","label":"Table (name from tables.json)","type":"string","default_value":"initiative"}]</option_schema>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function () {
+  // Generic list and form for any table of the model. The model (tables.json) and the screen settings (ui.json) are embedded by the build script.
+  var MODEL = {"tables":[{"name":"lookup_type","plural":{"en":"Lookup types","ar":"أنواع القوائم"},"fields":[{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":80,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":200,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":200,"mandatory":true},{"name":"legacy_table","type":"string","label":{"en":"Legacy table","ar":"الجدول القديم"},"length":120},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"}]},{"name":"lookup_value","plural":{"en":"Lookup values","ar":"قيم القوائم"},"fields":[{"name":"type","type":"reference","label":{"en":"Lookup type","ar":"نوع القائمة"},"mandatory":true,"reference":"lookup_type"},{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":100,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":300,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":300,"mandatory":true},{"name":"order","type":"integer","label":{"en":"Order","ar":"الترتيب"},"default":"100"},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"org_unit","plural":{"en":"Organisation units","ar":"الوحدات التنظيمية"},"fields":[{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":60,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":300,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":300,"mandatory":true},{"name":"unit_type","type":"string","label":{"en":"Unit type","ar":"نوع الوحدة"},"length":20,"mandatory":true,"choices":[["agency","Agency","وكالة"],["sector","Sector","قطاع"]]},{"name":"parent","type":"reference","label":{"en":"Parent","ar":"الوحدة الأعلى"},"reference":"org_unit"},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"strategy","plural":{"en":"Strategies","ar":"الإستراتيجيات"},"fields":[{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":40,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":500,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":500,"mandatory":true},{"name":"strategy_type","type":"string","label":{"en":"Strategy type","ar":"نوع الإستراتيجية"},"length":20},{"name":"description","type":"string","label":{"en":"Description","ar":"الوصف"},"length":1000},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"program","plural":{"en":"Programmes","ar":"البرامج"},"fields":[{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":40,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":500,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":500,"mandatory":true},{"name":"strategy","type":"reference","label":{"en":"Strategy","ar":"الإستراتيجية"},"reference":"strategy"},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"objective","plural":{"en":"Objectives","ar":"الأهداف"},"fields":[{"name":"code","type":"string","label":{"en":"Code","ar":"الرمز"},"length":60,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":500,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":500,"mandatory":true},{"name":"program","type":"reference","label":{"en":"Programme","ar":"البرنامج"},"reference":"program"},{"name":"status","type":"reference","label":{"en":"Status","ar":"الحالة"},"reference":"lookup_value"},{"name":"start_date","type":"glide_date","label":{"en":"Start date","ar":"تاريخ البداية"}},{"name":"end_date","type":"glide_date","label":{"en":"End date","ar":"تاريخ النهاية"}},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"initiative","plural":{"en":"Initiatives","ar":"المبادرات"},"fields":[{"name":"code","type":"string","label":{"en":"Initiative code","ar":"كود المبادرة"},"length":60,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":500,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":500,"mandatory":true},{"name":"objective","type":"reference","label":{"en":"Objective","ar":"الهدف"},"reference":"objective"},{"name":"status","type":"reference","label":{"en":"Status","ar":"الحالة"},"reference":"lookup_value"},{"name":"sector","type":"reference","label":{"en":"Owning sector","ar":"القطاع المالك"},"reference":"org_unit"},{"name":"start_date","type":"glide_date","label":{"en":"Start date","ar":"تاريخ البداية"}},{"name":"end_date","type":"glide_date","label":{"en":"End date","ar":"تاريخ النهاية"}},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]},{"name":"project","plural":{"en":"Projects","ar":"المشاريع"},"fields":[{"name":"code","type":"string","label":{"en":"Project code","ar":"رمز المشروع"},"length":60,"mandatory":true,"unique":true},{"name":"name_ar","type":"string","label":{"en":"Arabic name","ar":"الاسم العربي"},"length":500,"mandatory":true},{"name":"name_en","type":"string","label":{"en":"English name","ar":"الاسم الإنجليزي"},"length":500,"mandatory":true},{"name":"initiative","type":"reference","label":{"en":"Initiative","ar":"المبادرة"},"reference":"initiative"},{"name":"status","type":"reference","label":{"en":"Project status","ar":"حالة المشروع"},"reference":"lookup_value"},{"name":"progress","type":"integer","label":{"en":"Progress %","ar":"التقدم ٪"},"default":"0"},{"name":"target_start","type":"glide_date","label":{"en":"Target start","ar":"البداية المستهدفة"}},{"name":"target_finish","type":"glide_date","label":{"en":"Target finish","ar":"النهاية المستهدفة"}},{"name":"active","type":"boolean","label":{"en":"Active","ar":"فعال"},"default":"true"},{"name":"legacy_id","type":"string","label":{"en":"Legacy id","ar":"المعرّف القديم"},"length":40}]}]};
+  var UI = {"pages":[{"id":"vro_home","title":"VRO APP - Home","widget":"vro_home"},{"id":"vro_strategies","title":"Strategies","widget":"vro_table","options":{"table":"strategy"}},{"id":"vro_programs","title":"Programmes","widget":"vro_table","options":{"table":"program"}},{"id":"vro_objectives","title":"Objectives","widget":"vro_table","options":{"table":"objective"}},{"id":"vro_initiatives","title":"Initiatives","widget":"vro_table","options":{"table":"initiative"}},{"id":"vro_projects","title":"Projects","widget":"vro_table","options":{"table":"project"}},{"id":"vro_org_units","title":"Organisation units","widget":"vro_table","options":{"table":"org_unit"}},{"id":"vro_lookup_values","title":"Lookup values","widget":"vro_table","options":{"table":"lookup_value"}},{"id":"vro_lookup_types","title":"Lookup types","widget":"vro_table","options":{"table":"lookup_type"}}],"tables":{"strategy":{"page":"vro_strategies","icon":"layers","title":{"en":"Strategies","ar":"الإستراتيجيات"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add strategy","ar":"إضافة إستراتيجية"},"cols":["code","name_ar","name_en","strategy_type","active"],"search":["code","name_ar","name_en"],"filters":["active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"label":{"en":"Inactive","ar":"غير فعالة"},"filter":{"active":"false"}}]},"program":{"page":"vro_programs","icon":"layers","title":{"en":"Programmes","ar":"البرامج"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add programme","ar":"إضافة برنامج"},"cols":["code","name_ar","name_en","strategy","active"],"search":["code","name_ar","name_en"],"filters":["strategy","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"objective":{"page":"vro_objectives","icon":"target","title":{"en":"Objectives","ar":"الأهداف"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"Add objective","ar":"إضافة هدف"},"cols":["code","name_ar","program","status","active"],"search":["code","name_ar","name_en"],"filters":["program","status","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"initiative":{"page":"vro_initiatives","icon":"flag","codeInLabel":true,"title":{"en":"Initiatives","ar":"المبادرات"},"crumb":{"en":"Project management services","ar":"خدمات إدارة المشاريع"},"add":{"en":"New initiative","ar":"مبادرة جديدة"},"cols":["code","name_ar","objective","status","sector","active"],"search":["code","name_ar","name_en"],"filters":["status","objective","sector","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"filter":{"status":"@initiative_status_02"}},{"filter":{"status":"@initiative_status_04"}},{"filter":{"status":"@initiative_status_05"}}]},"project":{"page":"vro_projects","icon":"folder","codeInLabel":true,"title":{"en":"Projects","ar":"المشاريع"},"crumb":{"en":"Projects register","ar":"سجل المشاريع"},"add":{"en":"New project","ar":"مشروع جديد"},"cols":["code","name_ar","initiative","status","progress","active"],"search":["code","name_ar","name_en"],"filters":["status","initiative","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"filter":{"status":"@project_status_03"}},{"filter":{"status":"@project_status_01"}},{"filter":{"status":"@project_status_02"}}]},"org_unit":{"page":"vro_org_units","icon":"users","title":{"en":"Organisation units","ar":"الوحدات التنظيمية"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add unit","ar":"إضافة وحدة"},"cols":["code","name_ar","name_en","unit_type","parent","active"],"search":["code","name_ar","name_en"],"filters":["unit_type","active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}},{"label":{"en":"Agencies","ar":"الوكالات"},"filter":{"unit_type":"agency"}},{"label":{"en":"Sectors","ar":"القطاعات"},"filter":{"unit_type":"sector"}}]},"lookup_value":{"page":"vro_lookup_values","icon":"sliders","title":{"en":"Lookup values","ar":"قيم القوائم"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add value","ar":"إضافة قيمة"},"cols":["type","code","name_ar","name_en","order","active"],"search":["code","name_ar","name_en"],"filters":["type","active"],"sort":["type","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]},"lookup_type":{"page":"vro_lookup_types","icon":"sliders","title":{"en":"Lookup types","ar":"أنواع القوائم"},"crumb":{"en":"Reference data","ar":"البيانات المرجعية"},"add":{"en":"Add type","ar":"إضافة نوع"},"cols":["code","name_ar","name_en","active"],"search":["code","name_ar","name_en"],"filters":["active"],"sort":["code","asc"],"tiles":[{"label":{"en":"Total","ar":"الإجمالي"},"filter":{}}]}},"lookups":{"objective.status":"objective_status","initiative.status":"initiative_status","project.status":"project_status"},"menu":{"title":"VRO main menu","items":[{"label":{"en":"Home","ar":"الرئيسية"},"page":"vro_home","icon":"home","color":"c1"},{"label":{"en":"Strategies","ar":"الإستراتيجيات"},"page":"vro_strategies","icon":"flag","color":"c1"},{"label":{"en":"Programmes","ar":"البرامج"},"page":"vro_programs","icon":"layers","color":"c2"},{"label":{"en":"Objectives","ar":"الأهداف"},"page":"vro_objectives","icon":"target","color":"c3"},{"label":{"en":"Initiatives","ar":"المبادرات"},"page":"vro_initiatives","icon":"bulb","color":"c4"},{"label":{"en":"Projects","ar":"المشاريع"},"page":"vro_projects","icon":"folder","color":"c1"},{"label":{"en":"Organisation units","ar":"الوحدات التنظيمية"},"page":"vro_org_units","icon":"org","color":"c2","more":true},{"label":{"en":"Lookup values","ar":"قيم القوائم"},"page":"vro_lookup_values","icon":"list","color":"c3","more":true},{"label":{"en":"Lookup types","ar":"أنواع القوائم"},"page":"vro_lookup_types","icon":"tag","color":"c5","more":true}]}};
+  var scope = gs.getCurrentScopeName();
+  var lang = String(gs.getSession().getLanguage() || 'en').indexOf('ar') === 0 ? 'ar' : 'en';
+  var tname = (options && options.table) ? String(options.table) : ((input && input.table) ? String(input.table) : '');
+  var t = tdef(tname);
+  var cfg = UI.tables[tname];
+
+  function full(n) { return scope + '_' + n; }
+  function tdef(n) { for (var i = 0; i < MODEL.tables.length; i++) { if (MODEL.tables[i].name === n) { return MODEL.tables[i]; } } return null; }
+  function fdef(tb, n) { for (var i = 0; i < tb.fields.length; i++) { if (tb.fields[i].name === n) { return tb.fields[i]; } } return null; }
+  function lab(l) { return l ? (l[lang] || l.en || '') : ''; }
+  function msg(en, ar) { return lang === 'ar' ? ar : en; }
+  function isTrue(v) { return v === true || v === 'true' || v === '1'; }
+  function str(v) { return (v === null || v === undefined) ? '' : String(v); }
+
+  // label of a record when it is shown as a reference
+  function nameOf(tn, gr, forOption) {
+    var n = str(gr.getValue('name_' + lang)) || str(gr.getValue('name_ar')) || str(gr.getValue('name_en')) || str(gr.getValue('code'));
+    var c = UI.tables[tn];
+    if (c && c.codeInLabel && gr.getValue('code')) { n = gr.getValue('code') + ' · ' + n; }
+    if (forOption && tn === 'lookup_value') { n = n + ' (' + gr.getValue('code') + ')'; }
+    return n;
+  }
+  var refCache = {};
+  function refName(tn, id) {
+    if (!id) { return ''; }
+    var k = tn + ':' + id;
+    if (refCache[k] === undefined) { var g = new GlideRecordSecure(full(tn)); refCache[k] = g.get(id) ? nameOf(tn, g, false) : ''; }
+    return refCache[k];
+  }
+  function lookupId(code) { var g = new GlideRecordSecure(full('lookup_value')); g.addQuery('code', code); g.setLimit(1); g.query(); return g.next() ? g.getUniqueValue() : '-none-'; }
+  function choiceLabel(f, v) { if (!f.choices) { return v; } for (var i = 0; i < f.choices.length; i++) { if (f.choices[i][0] === v) { return lang === 'ar' ? (f.choices[i][2] || f.choices[i][1]) : f.choices[i][1]; } } return v; }
+
+  // options for a reference field (form selects and filters)
+  function refOptions(tb, f) {
+    var g = new GlideRecordSecure(full(f.reference)), lk = UI.lookups && UI.lookups[tb.name + '.' + f.name];
+    if (lk) { g.addQuery('type.code', lk); }
+    if (f.reference === 'lookup_value') { g.orderBy('type.code'); }
+    g.orderBy(f.reference === 'lookup_value' ? 'order' : 'code');
+    g.setLimit(500); g.query();
+    var out = [];
+    while (g.next()) { out.push({ v: g.getUniqueValue(), d: nameOf(f.reference, g, true) }); }
+    return out;
+  }
+
+  function cell(gr, f) {
+    var v = str(gr.getValue(f.name));
+    if (f.type === 'reference') { return { v: v, d: refName(f.reference, v) }; }
+    if (f.type === 'boolean') { var b = isTrue(v) ? 'true' : 'false'; return { v: b, d: b }; }
+    if (f.choices) { return { v: v, d: choiceLabel(f, v) }; }
+    return { v: v, d: v };
+  }
+  function rowOut(gr, tb) {
+    var o = { id: gr.getUniqueValue(), f: {} };
+    for (var i = 0; i < tb.fields.length; i++) { o.f[tb.fields[i].name] = cell(gr, tb.fields[i]); }
+    o.can = { w: gr.canWrite(), d: gr.canDelete() };
+    return o;
+  }
+
+  function applyFilters(gr, tb, fl) {
+    Object.keys(fl || {}).forEach(function (k) {
+      var v = fl[k]; if (v === '' || v === null || v === undefined) { return; }
+      var f = fdef(tb, k); if (!f) { return; }
+      if (typeof v === 'string' && v.charAt(0) === '@') { v = lookupId(v.substring(1)); }
+      if (f.type === 'boolean') { gr.addQuery(k, isTrue(v)); } else { gr.addQuery(k, v); }
+    });
+  }
+  function countOf(tb, fl) {
+    var g = new GlideRecordSecure(full(tb.name)); applyFilters(g, tb, fl);
+    var ga = new GlideAggregate(full(tb.name)); ga.addEncodedQuery(g.getEncodedQuery()); ga.addAggregate('COUNT'); ga.query();
+    return ga.next() ? parseInt(ga.getAggregate('COUNT'), 10) : 0;
+  }
+
+  function doList(inp) {
+    var gr = new GlideRecordSecure(full(t.name)), q = str(inp.q).replace(/^\s+|\s+$/g, '');
+    applyFilters(gr, t, inp.filters);
+    if (q && cfg.search && cfg.search.length) { var qc = gr.addQuery(cfg.search[0], 'CONTAINS', q); for (var i = 1; i < cfg.search.length; i++) { qc.addOrCondition(cfg.search[i], 'CONTAINS', q); } }
+    var ga = new GlideAggregate(full(t.name)); ga.addEncodedQuery(gr.getEncodedQuery()); ga.addAggregate('COUNT'); ga.query();
+    var total = ga.next() ? parseInt(ga.getAggregate('COUNT'), 10) : 0;
+    var sf = fdef(t, str(inp.sort)) || fdef(t, cfg.sort[0]), dir = inp.dir === 'desc' ? 'desc' : 'asc';
+    var key = sf.type === 'reference' ? sf.name + '.' + (sf.reference === 'lookup_value' ? 'name_ar' : 'name_ar') : sf.name;
+    if (dir === 'desc') { gr.orderByDesc(key); } else { gr.orderBy(key); }
+    var size = Math.min(Math.max(parseInt(inp.size, 10) || 10, 1), 100), page = Math.max(parseInt(inp.page, 10) || 1, 1);
+    gr.chooseWindow((page - 1) * size, page * size); gr.query();
+    var rows = []; while (gr.next()) { rows.push(rowOut(gr, t)); }
+    return { rows: rows, total: total, page: page, size: size };
+  }
+
+  function validate(vals, id) {
+    var errors = {};
+    t.fields.forEach(function (f) {
+      if (f.name === 'legacy_id') { return; }
+      var v = vals[f.name];
+      if (f.type === 'boolean') { return; }
+      v = str(v).replace(/^\s+|\s+$/g, '');
+      if (f.mandatory && v === '') { errors[f.name] = msg('This field is required', 'هذا الحقل إلزامي'); return; }
+      if (v === '') { return; }
+      if (f.type === 'string' && f.length && v.length > f.length) { errors[f.name] = msg('At most ' + f.length + ' characters', 'الحد الأقصى ' + f.length + ' حرفاً'); return; }
+      if (f.type === 'integer' && !/^-?[0-9]+$/.test(v)) { errors[f.name] = msg('Enter a whole number', 'أدخل رقماً صحيحاً'); return; }
+      if (f.type === 'glide_date' && !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v)) { errors[f.name] = msg('Use the form 2026-11-30', 'استخدم الشكل 2026-11-30'); return; }
+      if (f.choices) { var ok = false; for (var i = 0; i < f.choices.length; i++) { if (f.choices[i][0] === v) { ok = true; } } if (!ok) { errors[f.name] = msg('Choose a value from the list', 'اختر قيمة من القائمة'); return; } }
+      if (f.type === 'reference') { var rg = new GlideRecordSecure(full(f.reference)); if (!rg.get(v)) { errors[f.name] = msg('Choose a value from the list', 'اختر قيمة من القائمة'); return; } }
+      if (f.unique) { var ug = new GlideRecord(full(t.name)); ug.addQuery(f.name, v); if (id) { ug.addQuery('sys_id', '!=', id); } ug.setLimit(1); ug.query(); if (ug.hasNext()) { errors[f.name] = msg('This value is already used', 'هذه القيمة مستخدمة من قبل'); } }
+    });
+    return errors;
+  }
+  function doSave(inp) {
+    var vals = inp.values || {}, id = str(inp.id), gr = new GlideRecordSecure(full(t.name));
+    if (id) { if (!gr.get(id)) { return { ok: false, error: msg('Record not found', 'السجل غير موجود') }; } if (!gr.canWrite()) { return { ok: false, error: msg('You are not allowed to change this record', 'ليست لديك صلاحية تعديل هذا السجل') }; } }
+    else { gr.initialize(); if (!gr.canCreate()) { return { ok: false, error: msg('You are not allowed to create records here', 'ليست لديك صلاحية الإضافة هنا') }; } }
+    var errors = validate(vals, id);
+    if (Object.keys(errors).length) { return { ok: false, errors: errors }; }
+    t.fields.forEach(function (f) {
+      if (f.name === 'legacy_id' || vals[f.name] === undefined) { return; }
+      if (f.type === 'boolean') { gr.setValue(f.name, isTrue(vals[f.name]) ? 'true' : 'false'); }
+      else { gr.setValue(f.name, str(vals[f.name]).replace(/^\s+|\s+$/g, '')); }
+    });
+    var sid = id ? gr.update() : gr.insert();
+    if (!sid) { return { ok: false, error: msg('The record could not be saved', 'تعذر حفظ السجل') }; }
+    return { ok: true, id: String(sid), created: !id };
+  }
+  function doRemove(inp) {
+    var id = str(inp.id), gr = new GlideRecordSecure(full(t.name));
+    if (!gr.get(id)) { return { ok: false, error: msg('Record not found', 'السجل غير موجود') }; }
+    if (!gr.canDelete()) { return { ok: false, error: msg('You are not allowed to delete this record', 'ليست لديك صلاحية حذف هذا السجل') }; }
+    var used = [];
+    MODEL.tables.forEach(function (ot) { ot.fields.forEach(function (f) { if (f.type === 'reference' && f.reference === t.name) { var ag = new GlideAggregate(full(ot.name)); ag.addQuery(f.name, id); ag.addAggregate('COUNT'); ag.query(); var n = ag.next() ? parseInt(ag.getAggregate('COUNT'), 10) : 0; if (n > 0) { used.push(n + ' ' + lab(UI.tables[ot.name] ? UI.tables[ot.name].title : ot.plural)); } } }); });
+    if (used.length) { return { ok: false, error: msg('It is used by ', 'مستخدم في ') + used.join(', ') }; }
+    gr.deleteRecord();
+    return { ok: true };
+  }
+  function doToggle(inp) {
+    var gr = new GlideRecordSecure(full(t.name));
+    if (!gr.get(str(inp.id))) { return { ok: false, error: msg('Record not found', 'السجل غير موجود') }; }
+    if (!gr.canWrite()) { return { ok: false, error: msg('You are not allowed to change this record', 'ليست لديك صلاحية تعديل هذا السجل') }; }
+    gr.setValue('active', isTrue(gr.getValue('active')) ? 'false' : 'true'); gr.update();
+    return { ok: true };
+  }
+
+  function buildCfg() {
+    var cols = [], i, f, filters = [], opts = {};
+    for (i = 0; i < cfg.cols.length; i++) { f = fdef(t, cfg.cols[i]); cols.push({ name: f.name, type: f.type, label: lab(f.label), labelAr: f.label.ar, labelEn: f.label.en, choices: f.choices || null, ref: f.reference || '' }); }
+    var fields = [];
+    t.fields.forEach(function (fd) {
+      fields.push({ name: fd.name, type: fd.type, label: { en: fd.label.en, ar: fd.label.ar }, mandatory: !!fd.mandatory, unique: !!fd.unique, length: fd.length || 0, choices: fd.choices || null, ref: fd.reference || '', form: fd.name !== 'legacy_id', def: (fd['default'] !== undefined ? String(fd['default']) : '') });
+      if (fd.type === 'reference') { opts[fd.name] = refOptions(t, fd); }
+    });
+    for (i = 0; i < cfg.filters.length; i++) { f = fdef(t, cfg.filters[i]); filters.push(f.name); }
+    var tiles = [];
+    for (i = 0; i < cfg.tiles.length; i++) {
+      var tl = cfg.tiles[i], label = tl.label ? { en: tl.label.en, ar: tl.label.ar } : null;
+      if (!label) {
+        var first = Object.keys(tl.filter)[0], val = tl.filter[first];
+        var lg = new GlideRecordSecure(full('lookup_value')); lg.addQuery('code', String(val).substring(1)); lg.setLimit(1); lg.query();
+        label = lg.next() ? { en: lg.getValue('name_en'), ar: lg.getValue('name_ar') } : { en: val, ar: val };
+      }
+      tiles.push({ label: label, filter: tl.filter, count: countOf(t, tl.filter) });
+    }
+    return { table: t.name, icon: cfg.icon, title: cfg.title, crumb: cfg.crumb, add: cfg.add, cols: cols, fields: fields, filters: filters, sort: cfg.sort, tiles: tiles, opts: opts, lang: lang, scope: scope,
+      can: { create: new GlideRecordSecure(full(t.name)).canCreate() },
+      pages: UI.pages.map(function (p) { return { id: p.id, table: p.options ? p.options.table : '' }; }) };
+  }
+
+  if (!t || !cfg) { data.error = 'Unknown table "' + tname + '". Set the widget option "table" to a name from tables.json.'; return; }
+  if (input && input.action) {
+    try {
+      if (input.action === 'list') { data.result = doList(input); }
+      else if (input.action === 'save') { data.result = doSave(input); }
+      else if (input.action === 'remove') { data.result = doRemove(input); }
+      else if (input.action === 'toggle') { data.result = doToggle(input); }
+      else if (input.action === 'cfg') { data.result = buildCfg(); }
+    } catch (e) { gs.error('VRO widget ' + tname + ' ' + input.action + ': ' + e); data.result = { ok: false, error: msg('Unexpected error. Contact the administrator.', 'حدث خطأ غير متوقع. تواصل مع المسؤول.') }; }
+  } else {
+    try { data.cfg = buildCfg(); data.first = doList({ page: 1, size: 10, sort: cfg.sort[0], dir: cfg.sort[1], filters: {}, q: '' }); } catch (e3) { gs.error('VRO widget ' + tname + ' load: ' + e3); data.error = msg('Unexpected error. Contact the administrator.', 'حدث خطأ غير متوقع. تواصل مع المسؤول.'); }
+  }
+})();
+]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-11-11 13:19:52</sys_created_on>
+        <sys_id>a209b76c2fa81350bdca5b707fa4e3d7</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>VRO Table</sys_name>
+        <sys_package display_value="VRO-APP" source="x_1799784_vro_app">49aea3a42f681350bdca5b707fa4e329</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="VRO-APP">49aea3a42f681350bdca5b707fa4e329</sys_scope>
+        <sys_update_name>sp_widget_a209b76c2fa81350bdca5b707fa4e3d7</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-11-12 12:38:40</sys_updated_on>
+        <template><![CDATA[<div class="vro" dir="ltr"><div class="vro-loading">...</div></div>
+]]></template>
+    </sp_widget>
+</record_update>

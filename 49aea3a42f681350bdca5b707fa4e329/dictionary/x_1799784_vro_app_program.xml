@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element db_object_id="a7ae6ba42f681350bdca5b707fa4e36b" label="Programme" max_length="40" name="x_1799784_vro_app_program" type="collection">
+        <element label="Legacy id" max_length="40" name="legacy_id" type="string"/>
+        <element display="true" label="Arabic name" mandatory="true" max_length="500" name="name_ar" type="string"/>
+        <element label="Code" mandatory="true" max_length="40" name="code" type="string" unique="true"/>
+        <element label="English name" mandatory="true" max_length="500" name="name_en" type="string"/>
+        <element default="true" label="Active" max_length="40" name="active" type="boolean"/>
+        <element label="Strategy" max_length="32" name="strategy" reference="x_1799784_vro_app_strategy" type="reference"/>
+        <index name="index">
+            <element name="strategy"/>
+        </index>
+    </element>
+</database>
